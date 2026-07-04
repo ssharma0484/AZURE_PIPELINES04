@@ -59,7 +59,7 @@ steps:
 - task: AzureWebApp@1
   displayName: 'Deploy to Azure Web App'
   inputs:
-    azureSubscription: 'Azure-Service-Connection'
+    azureSubscription: 'sp_github'
     appType: 'webAppLinux'
     appName: 'mywebappblaze'
     package: '$(Build.ArtifactStagingDirectory)/website.zip'
