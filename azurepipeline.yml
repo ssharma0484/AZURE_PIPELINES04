@@ -12,7 +12,7 @@ steps:
 # Checkout source code
 - checkout: self
 
-# Install Python
+# Use Python
 - task: UsePythonVersion@0
   inputs:
     versionSpec: '$(pythonVersion)'
@@ -24,10 +24,53 @@ steps:
     pip install -r requirements.txt
   displayName: 'Install Dependencies'
 
-# Run unit tests
+# ==========================
+# DEBUG STEP
+# ==========================
+- script: |
+    echo "========================================="
+    echo "Current Working Directory"
+    echo "========================================="
+    pwd
+
+    echo ""
+    echo "========================================="
+    echo "Repository Files"
+    echo "========================================="
+    find .
+
+    echo ""
+    echo "========================================="
+    echo "Python Version"
+    echo "========================================="
+    python --version
+
+    echo ""
+    echo "========================================="
+    echo "Contents of app.py"
+    echo "========================================="
+    cat app.py
+
+    echo ""
+    echo "========================================="
+    echo "Contents of tests/test_app.py"
+    echo "========================================="
+    cat tests/test_app.py
+
+    echo ""
+    echo "========================================="
+    echo "Import Test"
+    echo "========================================="
+    python -c "import app; print('App imported successfully')"
+
+  displayName: 'Debug Repository'
+
+# ==========================
+# RUN UNIT TESTS
+# ==========================
 - script: |
     export PYTHONPATH=$(Build.SourcesDirectory)
-    python -m pytest tests --junitxml=test-results.xml
+    pytest tests -v --junitxml=test-results.xml
   displayName: 'Run Unit Tests'
 
 # Publish test results
