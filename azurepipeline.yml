@@ -1,0 +1,65 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  pythonVersion: '3.11'
+
+steps:
+
+# Checkout source code
+- checkout: self
+
+# Install Python
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '$(pythonVersion)'
+  displayName: 'Use Python $(pythonVersion)'
+
+# Install dependencies
+- script: |
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+  displayName: 'Install Dependencies'
+
+# Run unit tests
+- script: |
+    export PYTHONPATH=$(Build.SourcesDirectory)
+    python -m pytest tests --junitxml=test-results.xml
+  displayName: 'Run Unit Tests'
+
+# Publish test results
+- task: PublishTestResults@2
+  inputs:
+    testResultsFiles: 'test-results.xml'
+    testRunTitle: 'Flask Unit Tests'
+    failTaskOnFailedTests: true
+  displayName: 'Publish Test Results'
+
+# Archive application
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)'
+    includeRootFolder: false
+    archiveType: zip
+    archiveFile: '$(Build.ArtifactStagingDirectory)/website.zip'
+    replaceExistingArchive: true
+  displayName: 'Create ZIP Package'
+
+# Publish build artifact
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/website.zip'
+    ArtifactName: 'Website'
+  displayName: 'Publish Build Artifact'
+
+# Deploy to Azure App Service
+- task: AzureWebApp@1
+  displayName: 'Deploy to Azure Web App'
+  inputs:
+    azureSubscription: 'Azure-Service-Connection'
+    appType: 'webAppLinux'
+    appName: 'mywebappblaze'
+    package: '$(Build.ArtifactStagingDirectory)/website.zip'
